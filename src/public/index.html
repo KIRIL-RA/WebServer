@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Socket UI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .block {
+            margin-bottom: 15px;
+        }
+        .block label {
+            margin-right: 10px;
+        }
+        .slider {
+            display: inline-block;
+            width: 300px;
+        }
+        .digital-display {
+            display: inline-block;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Socket UI</h1>
+    <div id="ui-container"></div>
+
+    <script>
+        const socket = new WebSocket('ws://localhost:3000/?name=name&type=control'); // Replace with your WebSocket server URL
+
+        function updateUI(variables) {
+            variables.forEach(variable => {
+                const element = document.querySelector(`[data-name="${variable.name}"]`);
+                if (element) {
+                    if (variable.type === 0) {
+                        element.value = variable.value;
+                    } else if (variable.type === 1) {
+                        element.checked = variable.value === 1;
+                    } else if (variable.type === 2) {
+                        element.textContent = variable.value;
+                    } else if (variable.type === 3) {
+                        element.textContent = variable.value === 1 ? 'On' : 'Off';
+                    }
+                }
+            });
+        }
+
+        function sendCommand(name, value) {
+            const command = {
+                type: "set",
+                name: name,
+                value: value
+            };
+            socket.send(JSON.stringify(command));
+        }
+
+        socket.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+
+            if (data.type === 'init') {
+                const container = document.getElementById('ui-container');
+                container.innerHTML = ''; // Clear existing UI
+
+                data.variables.forEach(variable => {
+                    const block = document.createElement('div');
+                    block.className = 'block';
+
+                    const label = document.createElement('label');
+                    label.textContent = `${variable.name}: `;
+                    block.appendChild(label);
+
+                    if (variable.type === 0) {
+                        // Slider (0-1023)
+                        const slider = document.createElement('input');
+                        slider.type = 'range';
+                        slider.min = 0;
+                        slider.max = 1023;
+                        slider.value = variable.value;
+                        slider.className = 'slider';
+                        slider.setAttribute('data-name', variable.name);
+                        slider.addEventListener('input', (e) => {
+                            sendCommand(variable.name, e.target.value);
+                        });
+                        block.appendChild(slider);
+                    } else if (variable.type === 1) {
+                        // Switch (0-1)
+                        const switchControl = document.createElement('input');
+                        switchControl.type = 'checkbox';
+                        switchControl.checked = variable.value === 1;
+                        switchControl.setAttribute('data-name', variable.name);
+                        switchControl.addEventListener('change', (e) => {
+                            sendCommand(variable.name, e.target.checked ? 1 : 0);
+                        });
+                        block.appendChild(switchControl);
+                    } else if (variable.type === 2) {
+                        // Slider with digital indication
+                        const valueDisplay = document.createElement('span');
+                        valueDisplay.className = 'digital-display';
+                        valueDisplay.textContent = variable.value;
+                        valueDisplay.setAttribute('data-name', variable.name);
+                        block.appendChild(valueDisplay);
+                    } else if (variable.type === 3) {
+                        // Switch without control
+                        const switchDisplay = document.createElement('span');
+                        switchDisplay.textContent = variable.value === 1 ? 'On' : 'Off';
+                        switchDisplay.setAttribute('data-name', variable.name);
+                        block.appendChild(switchDisplay);
+                    }
+
+                    container.appendChild(block);
+                });
+            } else {
+                // Update existing UI
+                updateUI(data);
+            }
+        };
+    </script>
+</body>
+</html>
