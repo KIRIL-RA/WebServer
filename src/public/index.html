@@ -30,7 +30,11 @@
     <div id="ui-container"></div>
 
     <script>
-        const socket = new WebSocket('ws://localhost:3000/?name=name&type=control'); // Replace with your WebSocket server URL
+        // Extract parameters from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const pageName = window.location.pathname.split('/').pop();
+        const socketUrl = `ws://${window.location.host}/?name=${pageName}&type=control`;
+        const socket = new WebSocket(socketUrl);
 
         function updateUI(variables) {
             variables.forEach(variable => {
