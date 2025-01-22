@@ -60,19 +60,6 @@ function CreateWebSocket(nodeServer: Server) {
                         if (controller.name === name) controller.connection.send(JSON.stringify(esp.GetVariables()));
                     });
                 });
-
-                /*ws.on('close', () => {
-                    const index = espDevices.findIndex(c => c.mac === mac);
-                    if (index !== -1) {
-                        espDevices.splice(index, 1);
-                    }
-    
-                    // Cloase all controllers connected to this esp
-                    controllers.forEach((controller, i) => {
-                        if(controller.mac === mac) controller.connection.close();
-                        controllers.splice(i, 1);
-                    });
-                });*/
                 break;
 
             // Control connection handler

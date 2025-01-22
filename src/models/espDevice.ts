@@ -1,6 +1,40 @@
 import { Client, MessageType, Variable } from '../interfaces/Esp';
 import WebSocket, { Server /* etc */ } from 'ws';
 
+/**
+ * Класс, представляющий устройство ESP.
+ * 
+ * @class EspDevice
+ * @property {string} mac - MAC-адрес устройства.
+ * @property {string} name - Имя устройства.
+ * @property {WebSocket} connection - Соединение WebSocket с устройством.
+ * @property {Variable[]} variables - Массив переменных устройства.
+ * 
+ * @method constructor - Конструктор класса EspDevice.
+ * @param {string} mac - MAC-адрес устройства.
+ * @param {string} name - Имя устройства.
+ * @param {WebSocket} connection - Соединение WebSocket с устройством.
+ * 
+ * @method HandleInitMessage - Обрабатывает начальное сообщение и инициализирует переменные.
+ * @param {any} data - Данные начального сообщения.
+ * 
+ * @method UpdateStates - Обновляет состояния переменных на основе полученных данных.
+ * @param {any} data - Данные для обновления состояний.
+ * 
+ * @method UpdateVariableLocal - Локально обновляет значение переменной.
+ * @param {string} name - Имя переменной.
+ * @param {number} value - Новое значение переменной.
+ * 
+ * @method SetVariable - Устанавливает значение переменной и отправляет сообщение устройству.
+ * @param {string} name - Имя переменной.
+ * @param {number} value - Новое значение переменной.
+ * 
+ * @method GetVariables - Возвращает массив текущих переменных устройства.
+ * @returns {Variable[]} Массив переменных устройства.
+ * 
+ * @method HandleMessage - Обрабатывает входящие сообщения от устройства.
+ * @param {string} message - Входящее сообщение в формате JSON.
+ */
 export class EspDevice {
     mac: string;
     name: string;
@@ -14,11 +48,11 @@ export class EspDevice {
     }
 
     private HandleInitMessage(data: any) {
-        // Process all recieved variables
+        // Process all received variables
         this.variables = [];
-        const recievedVariables = data.variables;
+        const receivedVariables = data.variables;
 
-        recievedVariables.forEach((variable: any) => {
+        receivedVariables.forEach((variable: any) => {
             this.variables.push({
                 name: variable.name,
                 value: Number(variable.value),
@@ -27,22 +61,25 @@ export class EspDevice {
         });
     }
 
-    private UpdateStates(data: any){
-        const recievedVariables = data.variables;
-        recievedVariables.forEach((variable: any) => {
+    private UpdateStates(data: any) {
+        // Update states of variables based on received data
+        const receivedVariables = data.variables;
+        receivedVariables.forEach((variable: any) => {
             this.UpdateVariableLocal(variable.name, Number(variable.value));
         });
     }
 
-    private UpdateVariableLocal(name: string, value: number){
+    private UpdateVariableLocal(name: string, value: number) {
+        // Update the local value of a variable
         const variable = this.variables.find(v => v.name === name);
-        if(variable) variable.value = value;
+        if (variable) variable.value = value;
     }
 
-    public async SetVariable(name: string, value: number){
+    public async SetVariable(name: string, value: number) {
+        // Set the value of a variable and send a message to the device
         console.log('Setting variable', name, value);
         const variable = this.variables.find(v => v.name === name);
-        if(!variable) return;
+        if (!variable) return;
 
         variable.value = value;
 
@@ -55,7 +92,8 @@ export class EspDevice {
         this.connection.send(message);
     }
 
-    public GetVariables(){
+    public GetVariables() {
+        // Return the current array of device variables
         return this.variables;
     }
 
@@ -70,19 +108,19 @@ export class EspDevice {
 
             switch (Number(dataObj.type)) {
                 case MessageType.INIT:
+                    // Handle initialization message
                     this.HandleInitMessage(dataObj);
                     break;
 
                 case MessageType.STATE:
+                    // Handle state update message
                     this.UpdateStates(dataObj);
                     break;
                 default:
                     console.log('Invalid message type');
             }
-        }
-        catch (e) {
+        } catch (e) {
             console.log(e);
-
         }
     }
 }
