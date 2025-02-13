@@ -46,7 +46,7 @@
 1. Клонируйте ваш проект на сервер:
     ```bash
     git clone https://github.com/KIRIL-RA/WebServer
-    cd https://github.com/KIRIL-RA/WebServer
+    cd WebServer
     ```
 
 ## Установка зависимостей проекта
