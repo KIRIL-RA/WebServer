@@ -45,8 +45,8 @@
 
 1. Клонируйте ваш проект на сервер:
     ```bash
-    git clone <URL вашего репозитория>
-    cd <название вашего репозитория>
+    git clone https://github.com/KIRIL-RA/WebServer
+    cd https://github.com/KIRIL-RA/WebServer
     ```
 
 ## Установка зависимостей проекта
